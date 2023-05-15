@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DebugWindow));
             flashbangCountLabel = new Label();
             label1 = new Label();
             SuspendLayout();
@@ -59,10 +60,10 @@
             Controls.Add(label1);
             Controls.Add(flashbangCountLabel);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "DebugWindow";
-            ShowIcon = false;
             Text = "Twitch Flashbanger";
             FormClosed += DebugWindow_FormClosed;
             ResumeLayout(false);

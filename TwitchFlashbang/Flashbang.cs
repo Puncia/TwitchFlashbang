@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Media;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Windows.Forms;
 
 namespace TwitchFlashbang
 {
@@ -68,6 +70,16 @@ namespace TwitchFlashbang
         {
             InitializeComponent();
 
+            notifyIcon1.ContextMenuStrip = new()
+            {
+                Items =
+                {
+                    new ToolStripMenuItem("Exit", null, Exit)
+                }
+            };
+
+            notifyIcon1.Text = "Twitch Flashbang";
+
             testMode = Convert.ToBoolean(AppConfig.Configuration["testMode"]);
 
             Task.Run(twitchBot.MainAsync);
@@ -76,6 +88,7 @@ namespace TwitchFlashbang
 
             Debug.WriteLine($"Handle: {Handle:x}");
 
+            FormBorderStyle = FormBorderStyle.None;
             if (testMode)
             {
                 Size = new(Screen.PrimaryScreen?.Bounds.Width ?? 0, Screen.PrimaryScreen?.Bounds.Height ?? 0);
@@ -96,7 +109,6 @@ namespace TwitchFlashbang
             numIterations = (int)(fadeDuration * updateRate);
             opacityDecrementPerIteration = (initialOpacity - finalOpacity) / numIterations;
 
-            FormBorderStyle = FormBorderStyle.None;
             TransparencyKey = BackColor;
 
             int exStyle = GetWindowLong(Handle, GWL_EXSTYLE);
@@ -112,9 +124,9 @@ namespace TwitchFlashbang
             new Thread(t_ProcessFlashbangs).Start();
         }
 
-        async void StartTwitchBot()
+        private void Exit(object? sender, EventArgs e)
         {
-            await twitchBot.MainAsync();
+            Application.Exit();
         }
 
         private void TwitchBot_OnFlashbangData(FlashbangData obj)
@@ -142,7 +154,10 @@ namespace TwitchFlashbang
                 else
                     forceAbort = false;
 
-                Thread.Sleep(RandomNumberGenerator.GetInt32(1300, 1900));
+                if (forceAbort)
+                    Thread.Sleep(RandomNumberGenerator.GetInt32(1300, 1900));
+                else
+                    Thread.Sleep(10);
             }
         }
 
