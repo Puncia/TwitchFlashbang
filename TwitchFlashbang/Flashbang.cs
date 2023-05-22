@@ -91,16 +91,16 @@ namespace TwitchFlashbang
             FormBorderStyle = FormBorderStyle.None;
             if (testMode)
             {
-                Size = new(Screen.PrimaryScreen?.Bounds.Width ?? 0, Screen.PrimaryScreen?.Bounds.Height ?? 0);
-                Location = new Point(0, 0);
-
+                Size = new Size(500, 500);
+                Location = new Point(Screen.PrimaryScreen?.Bounds.Width / 2 - Size.Width / 2 ?? 0, Screen.PrimaryScreen?.Bounds.Height / 2 - Size.Height / 2 ?? 0);
+                
                 dbgWindow = new();
                 dbgWindow.Show();
             }
             else
             {
-                Size = new Size(500, 500);
-                Location = new Point(Screen.PrimaryScreen?.Bounds.Width / 2 - Size.Width / 2 ?? 0, Screen.PrimaryScreen?.Bounds.Height / 2 - Size.Height / 2 ?? 0);
+                Size = new(Screen.PrimaryScreen?.Bounds.Width ?? 0, Screen.PrimaryScreen?.Bounds.Height ?? 0);
+                Location = new Point(0, 0);
             }
 
             screenshot = new(Screen.PrimaryScreen?.Bounds.Width ?? 0, Screen.PrimaryScreen?.Bounds.Height ?? 0);
@@ -133,7 +133,7 @@ namespace TwitchFlashbang
         {
             flashbangs.Enqueue(obj);
         }
-
+        
         private void t_ProcessFlashbangs()
         {
             while (CanThreadsRun)
@@ -190,6 +190,12 @@ namespace TwitchFlashbang
 
         private void Flash(FlashbangData fd)
         {
+            if (!isFading)
+            {
+                TakeScreenshot();
+                Debug.WriteLine($"Taking screenshot, isFading: {isFading}");
+            }
+
             isBlinding = true;
             pictureBox1.Image = null;
 
@@ -198,12 +204,8 @@ namespace TwitchFlashbang
 
             Debug.WriteLine($"[{fd.ID}] starting");
 
-            if (!isFading)
-            {
-                TakeScreenshot();
-            }
 
-            if (testMode)
+            if (!testMode)
                 player.Play();
 
             DateTime dtStart = DateTime.Now;
@@ -223,8 +225,6 @@ namespace TwitchFlashbang
             /// Fading
             /// ******
 
-            pictureBox1.Image = GenerateOverlay(screenshot);
-
             isFading = true;
             fd.fadingStopwatch.Start();
 
@@ -232,14 +232,17 @@ namespace TwitchFlashbang
             {
                 _Opacity -= opacityDecrementPerIteration * 255;
 
+                if (pictureBox1.Image == null)
+                    pictureBox1.Image = GenerateOverlay(screenshot);
+
                 BeginInvoke(() =>
                 {
                     SetLayeredWindowAttributes(Handle, 0, (byte)_Opacity, 0x2);
                     UpdateWindow(Handle);
                 });
 
-                while ((fd.fadingStopwatch.Elapsed.TotalSeconds < (i + 1) * (1.0 / updateRate))
-                    && !forceAbort) { Thread.Sleep(1); }
+                while ((fd.fadingStopwatch.Elapsed.TotalSeconds < (i + 1) * (1.0 / updateRate)) && !forceAbort)
+                    Thread.Sleep(1);
 
                 if (forceAbort)
                 {
@@ -247,7 +250,10 @@ namespace TwitchFlashbang
                     TimeSpan aborted_timeSpan = dtStart - aborted_dtStop;
 
                     Debug.WriteLine($"[{fd.ID}] aborting at {Math.Abs(aborted_timeSpan.TotalMilliseconds)}ms");
-                    forceAbort = false;
+
+                    pictureBox1.Image = null;
+
+                    //forceAbort = false;
                     return;
                 }
             }
@@ -295,13 +301,6 @@ namespace TwitchFlashbang
                     // Draw the original bitmap onto the result bitmap with the color transformation
                     graphics.DrawImage(bmp, new Rectangle(0, 0, resultBitmap.Width, resultBitmap.Height), 0, 0, bmp.Width, bmp.Height, GraphicsUnit.Pixel, imageAttributes);
                 }
-#if false
-                // Draw a semi-transparent white rectangle on top of the transformed bitmap
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(230, Color.Transparent)))
-                {
-                    graphics.FillRectangle(brush, 0, 0, resultBitmap.Width, resultBitmap.Height);
-                }
-#endif
             }
 
             return resultBitmap;
