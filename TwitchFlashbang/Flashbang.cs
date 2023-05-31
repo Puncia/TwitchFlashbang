@@ -1,10 +1,13 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Media;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Windows.Forms;
 
 namespace TwitchFlashbang
@@ -26,6 +29,15 @@ namespace TwitchFlashbang
 
         [DllImport("user32.dll")]
         private static extern bool UpdateWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct RECT
@@ -50,7 +62,7 @@ namespace TwitchFlashbang
         private bool isBlinding = false;
         private bool isFading = false;
         private bool testMode = false;
-
+        
         ConcurrentQueue<FlashbangData> flashbangs = new ConcurrentQueue<FlashbangData>();
         SoundPlayer player = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "flashbang.wav"));
         Graphics g;
@@ -65,6 +77,9 @@ namespace TwitchFlashbang
         public bool CanThreadsRun = true;
         private double initialOpacity = 1.0;
         private double finalOpacity = 0.0;
+
+        private bool enableAfterimage = false;
+        private Dictionary<string, dynamic> perAppOpacity = new();
 
         public Flashbang()
         {
@@ -81,6 +96,19 @@ namespace TwitchFlashbang
             notifyIcon1.Text = "Twitch Flashbang";
 
             testMode = Convert.ToBoolean(AppConfig.Configuration["testMode"]);
+            enableAfterimage = Convert.ToBoolean(AppConfig.Configuration["enableAfterimage"]);
+
+            try
+            {
+                var perAppOpacitySection = AppConfig.Configuration.GetSection("perAppOpacity");
+                var perAppOpacityValues = perAppOpacitySection.GetChildren();
+
+                foreach (var oValue in perAppOpacityValues)
+                {
+                    perAppOpacity.Add(oValue.Key.ToLower(), Convert.ToDouble(oValue.Value));
+                }
+            }
+            catch (NullReferenceException) { }
 
             Task.Run(twitchBot.MainAsync);
 
@@ -190,7 +218,7 @@ namespace TwitchFlashbang
 
         private void Flash(FlashbangData fd)
         {
-            if (!isFading)
+            if (!isFading && enableAfterimage)
             {
                 TakeScreenshot();
                 Debug.WriteLine($"Taking screenshot, isFading: {isFading}");
@@ -199,11 +227,24 @@ namespace TwitchFlashbang
             isBlinding = true;
             pictureBox1.Image = null;
 
-            double _Opacity = (initialOpacity * 255);
             int delayMilliseconds = (int)Math.Round(1000 / updateRate);
 
             Debug.WriteLine($"[{fd.ID}] starting");
 
+            string? foregroundWnd = Path.GetFileNameWithoutExtension(GetForegroundWindowExecutableName())?.ToLower();
+            if(foregroundWnd != null)
+            {
+                Debug.WriteLine($"foreground wnd: {foregroundWnd}");
+                foreach (var app in perAppOpacity)
+                {
+                    if(foregroundWnd == Path.GetFileNameWithoutExtension(app.Key))
+                    {
+                        initialOpacity = app.Value;
+                        break;
+                    }
+                }
+            }
+            double _Opacity = initialOpacity * 255;
 
             if (!testMode)
                 player.Play();
@@ -228,8 +269,10 @@ namespace TwitchFlashbang
             isFading = true;
             fd.fadingStopwatch.Start();
 
-            for (int i = 0; i < numIterations; i++)
+            for (int i = 0; i < numIterations && _Opacity > 0; i++)
             {
+                Debug.Write($"{(byte)_Opacity},");
+
                 _Opacity -= opacityDecrementPerIteration * 255;
 
                 if (pictureBox1.Image == null)
@@ -266,6 +309,29 @@ namespace TwitchFlashbang
             isFading = false;
 
             fd.Dispose();
+        }
+
+        public static string? GetForegroundWindowExecutableName()
+        {
+            IntPtr hWnd = GetForegroundWindow();
+            if (hWnd == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            StringBuilder titleBuilder = new StringBuilder(256);
+            GetWindowText(hWnd, titleBuilder, titleBuilder.Capacity);
+
+            GetWindowThreadProcessId(hWnd, out uint processId);
+            Process process = Process.GetProcessById((int)processId);
+
+            string? executableName = process?.MainModule?.FileName;
+            if (string.IsNullOrEmpty(executableName))
+            {
+                return null;
+            }
+
+            return executableName;
         }
 
         private void TakeScreenshot()

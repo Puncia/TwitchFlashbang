@@ -5,7 +5,8 @@ namespace TwitchFlashbang
     internal class AppConfig
     {
         public static IConfiguration Configuration { get; set; }
-        public TwitchConfig TwitchConfig { get; set; } = new TwitchConfig();
+
+        public TwitchConfig twitchConfig { get; set; } = new TwitchConfig();
         
     }
 
@@ -16,4 +17,5 @@ namespace TwitchFlashbang
         public string clientSecret { get; set; } = string.Empty;
         public string[] rewardIDs { get; set; } = new string[0];
     }
+
 }
