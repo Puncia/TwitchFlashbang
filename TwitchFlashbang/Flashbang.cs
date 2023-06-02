@@ -135,7 +135,6 @@ namespace TwitchFlashbang
             g = Graphics.FromImage(screenshot);
 
             numIterations = (int)(fadeDuration * updateRate);
-            opacityDecrementPerIteration = (initialOpacity - finalOpacity) / numIterations;
 
             TransparencyKey = BackColor;
 
@@ -231,6 +230,7 @@ namespace TwitchFlashbang
 
             Debug.WriteLine($"[{fd.ID}] starting");
 
+            initialOpacity = 1;
             string? foregroundWnd = Path.GetFileNameWithoutExtension(GetForegroundWindowExecutableName())?.ToLower();
             if(foregroundWnd != null)
             {
@@ -244,6 +244,7 @@ namespace TwitchFlashbang
                     }
                 }
             }
+            opacityDecrementPerIteration = (initialOpacity - finalOpacity) / numIterations;
             double _Opacity = initialOpacity * 255;
 
             if (!testMode)
@@ -269,10 +270,10 @@ namespace TwitchFlashbang
             isFading = true;
             fd.fadingStopwatch.Start();
 
+            Debug.WriteLine($"[{fd.ID}] fading from {initialOpacity} to {finalOpacity} with step={opacityDecrementPerIteration}");
+
             for (int i = 0; i < numIterations && _Opacity > 0; i++)
             {
-                Debug.Write($"{(byte)_Opacity},");
-
                 _Opacity -= opacityDecrementPerIteration * 255;
 
                 if (pictureBox1.Image == null)
