@@ -262,7 +262,7 @@ namespace TwitchFlashbang
             while (fd.flashingStopwatch.ElapsedMilliseconds < flashDuration * 1000) { Thread.Sleep(1); }
             Debug.WriteLine($"[{fd.ID}] flash: {fd.flashingStopwatch.ElapsedMilliseconds}ms");
             isBlinding = false;
-
+            
             /// ******
             /// Fading
             /// ******
@@ -296,8 +296,7 @@ namespace TwitchFlashbang
                     Debug.WriteLine($"[{fd.ID}] aborting at {Math.Abs(aborted_timeSpan.TotalMilliseconds)}ms");
 
                     pictureBox1.Image = null;
-
-                    //forceAbort = false;
+                                        
                     return;
                 }
             }
@@ -310,6 +309,14 @@ namespace TwitchFlashbang
             isFading = false;
 
             fd.Dispose();
+
+            BeginInvoke(() =>
+            {
+                SetLayeredWindowAttributes(Handle, 0, 0, 0x2);
+                UpdateWindow(Handle);
+            });
+
+            return;
         }
 
         public static string? GetForegroundWindowExecutableName()
