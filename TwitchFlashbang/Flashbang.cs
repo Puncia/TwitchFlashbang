@@ -62,7 +62,7 @@ namespace TwitchFlashbang
         private bool isBlinding = false;
         private bool isFading = false;
         private bool testMode = false;
-        
+
         ConcurrentQueue<FlashbangData> flashbangs = new ConcurrentQueue<FlashbangData>();
         SoundPlayer player = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "flashbang.wav"));
         Graphics g;
@@ -120,15 +120,15 @@ namespace TwitchFlashbang
             if (testMode)
             {
                 Size = new Size(500, 500);
-                Location = new Point(Screen.PrimaryScreen?.Bounds.Width / 2 - Size.Width / 2 ?? 0, Screen.PrimaryScreen?.Bounds.Height / 2 - Size.Height / 2 ?? 0);
-                
+                Location = new Point(Screen.PrimaryScreen.Bounds.Width / 2 - Size.Width / 2, Screen.PrimaryScreen.Bounds.Height / 2 - Size.Height / 2);
+
                 dbgWindow = new();
                 dbgWindow.Show();
             }
             else
             {
-                Size = new(Screen.PrimaryScreen?.Bounds.Width ?? 0, Screen.PrimaryScreen?.Bounds.Height ?? 0);
-                Location = new Point(0, 0);
+                Size = new(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+                Location = Screen.PrimaryScreen.WorkingArea.Location;
             }
 
             screenshot = new(Screen.PrimaryScreen?.Bounds.Width ?? 0, Screen.PrimaryScreen?.Bounds.Height ?? 0);
@@ -160,7 +160,7 @@ namespace TwitchFlashbang
         {
             flashbangs.Enqueue(obj);
         }
-        
+
         private void t_ProcessFlashbangs()
         {
             while (CanThreadsRun)
@@ -232,12 +232,12 @@ namespace TwitchFlashbang
 
             initialOpacity = 1;
             string? foregroundWnd = Path.GetFileNameWithoutExtension(GetForegroundWindowExecutableName())?.ToLower();
-            if(foregroundWnd != null)
+            if (foregroundWnd != null)
             {
                 Debug.WriteLine($"foreground wnd: {foregroundWnd}");
                 foreach (var app in perAppOpacity)
                 {
-                    if(foregroundWnd == Path.GetFileNameWithoutExtension(app.Key))
+                    if (foregroundWnd == Path.GetFileNameWithoutExtension(app.Key))
                     {
                         initialOpacity = app.Value;
                         break;
@@ -276,7 +276,7 @@ namespace TwitchFlashbang
             {
                 _Opacity -= opacityDecrementPerIteration * 255;
 
-                if (pictureBox1.Image == null)
+                if (pictureBox1.Image == null && enableAfterimage)
                     pictureBox1.Image = GenerateOverlay(screenshot);
 
                 BeginInvoke(() =>
@@ -305,7 +305,7 @@ namespace TwitchFlashbang
             DateTime dtStop = DateTime.Now;
             TimeSpan timeSpan = dtStart - dtStop;
 
-            Debug.WriteLine($"[#{fd.ID}]done in {Math.Abs(timeSpan.TotalMilliseconds)}ms");
+            Debug.WriteLine($"[#{fd.ID}] done in {Math.Abs(timeSpan.TotalMilliseconds)}ms");
             fd.fadingStopwatch.Stop();
             isFading = false;
 

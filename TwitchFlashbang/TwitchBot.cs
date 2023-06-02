@@ -45,9 +45,14 @@ namespace TwitchFlashbang
         }
         private async void PubSub_OnChannelPointsRewardRedeemed(object sender, OnChannelPointsRewardRedeemedArgs e)
         {
-            if (e.RewardRedeemed.Redemption.Reward.Id == AppConfig.Configuration["twitchConfig:rewardIDs"])
+            var IDs = AppConfig.Configuration.GetSection("twitchConfig:rewardIDs").GetChildren();
+
+            foreach (var ID in IDs)
             {
-                OnFlashbangData?.Invoke(new FlashbangData(e.RewardRedeemed.Redemption.Id, e.ChannelId));
+                if (e.RewardRedeemed.Redemption.Reward.Id == ID.Value)
+                {
+                    OnFlashbangData?.Invoke(new FlashbangData(e.RewardRedeemed.Redemption.Id, e.ChannelId));
+                }
             }
         }
 
