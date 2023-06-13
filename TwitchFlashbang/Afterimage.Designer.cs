@@ -1,6 +1,6 @@
 ﻿namespace TwitchFlashbang
 {
-    partial class Flashbang
+    partial class Afterimage
     {
         /// <summary>
         /// Required designer variable.
@@ -28,35 +28,41 @@
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Flashbang));
-            notifyIcon1 = new NotifyIcon(components);
+            pictureBox1 = new PictureBox();
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
             // 
-            // notifyIcon1
+            // pictureBox1
             // 
-            notifyIcon1.Icon = (Icon)resources.GetObject("notifyIcon1.Icon");
-            notifyIcon1.Text = "notifyIcon1";
-            notifyIcon1.Visible = true;
+            pictureBox1.BackColor = Color.White;
+            pictureBox1.Dock = DockStyle.Fill;
+            pictureBox1.Location = new Point(0, 0);
+            pictureBox1.Margin = new Padding(0);
+            pictureBox1.Name = "pictureBox1";
+            pictureBox1.Size = new Size(484, 461);
+            pictureBox1.TabIndex = 0;
+            pictureBox1.TabStop = false;
             // 
-            // Flashbang
+            // Afterimage
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
             ClientSize = new Size(484, 461);
             ControlBox = false;
-            Icon = (Icon)resources.GetObject("$this.Icon");
-            Name = "Flashbang";
+            Controls.Add(pictureBox1);
+            DoubleBuffered = true;
+            Name = "Afterimage";
             ShowIcon = false;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Flashbang";
-            FormClosed += Flashbang_FormClosed;
+            Text = "Afterimage";
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
         }
 
         #endregion
-        private NotifyIcon notifyIcon1;
+
+        private PictureBox pictureBox1;
     }
 }

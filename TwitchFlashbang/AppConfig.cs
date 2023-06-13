@@ -7,7 +7,7 @@ namespace TwitchFlashbang
         public static IConfiguration Configuration { get; set; }
 
         public TwitchConfig twitchConfig { get; set; } = new TwitchConfig();
-        
+
     }
 
     internal class TwitchConfig

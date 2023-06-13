@@ -27,14 +27,16 @@ namespace TwitchFlashbang
             PubSub.OnPubSubServiceClosed += OnPubSubServiceClosed;
             PubSub.OnPubSubServiceError += OnPubSubServiceError;
 
-            ListenToRewards(channelId);
+            if (channelId != null)
+            {
+                ListenToRewards(channelId);
+            }
 
             PubSub.Connect();
 
             await Task.Delay(Timeout.Infinite);
         }
 
-        
 
         #region Reward Events
 
@@ -43,7 +45,7 @@ namespace TwitchFlashbang
             PubSub.OnChannelPointsRewardRedeemed += PubSub_OnChannelPointsRewardRedeemed;
             PubSub.ListenToChannelPoints(channelId);
         }
-        private async void PubSub_OnChannelPointsRewardRedeemed(object sender, OnChannelPointsRewardRedeemedArgs e)
+        private void PubSub_OnChannelPointsRewardRedeemed(object sender, OnChannelPointsRewardRedeemedArgs e)
         {
             var IDs = AppConfig.Configuration.GetSection("twitchConfig:rewardIDs").GetChildren();
 
