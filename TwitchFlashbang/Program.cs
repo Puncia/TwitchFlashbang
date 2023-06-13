@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
+using System.Reflection;
 
+[assembly: AssemblyVersion("0.1.*")]
 namespace TwitchFlashbang
 {
     internal static class Program
