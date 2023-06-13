@@ -1,3 +1,5 @@
+https://github.com/Puncia/TwitchFlashbang/assets/4633311/ad310e6d-42aa-43b9-a0ee-f349776cd1a5
+
 you can now bring the CS:GO flashbang directly to your desktop.
 connect it to your twitch account and setup a dedicated reward in your channel, to be used by your viewers.
 this program does not "block" mouse clicks, so you can continue to use your computer while getting flashbanged.
