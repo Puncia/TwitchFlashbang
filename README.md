@@ -13,6 +13,7 @@ you need a `twitchflashbang.json` file alongside the executable that looks like 
 ```json
 {
   "testMode": "false",
+  "testKey": "Alt + F",
   "enableAfterimage": "true",
   "perAppOpacity": {
     "LeagueClientUx": 0.5,
@@ -30,6 +31,7 @@ you need a `twitchflashbang.json` file alongside the executable that looks like 
 ```
 explaination:
 - `testMode`: flashes a 500x500 portion instead of the whole screen;
+- `testKey`: a combination of keys that fires a flashbang. This is not mandatory and you can remove it;
 - `enableAfterimage`: a screenshot of the desktop before flashing is taken, and is displayed right when the flash starts to fade;
 - `perAppOpacity`: you can define per-app opacity, so for example you could set 50% transparency when playing a game, if you do not want to be completely blinded;
 - `twitchConfig`: you have to retrieve the values yourself: use [twitchtokengenerator.com](https://twitchtokengenerator.com/) and populate the fields;
