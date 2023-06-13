@@ -51,9 +51,10 @@ namespace TwitchFlashbang
             public int Bottom;
         }
 
-        public const int GWL_EXSTYLE = -20;
-        public const int WS_EX_LAYERED = 0x80000;
-        public const int WS_EX_TRANSPARENT = 0x20;
+        private const int GWL_EXSTYLE = -20;
+        private const int WS_EX_LAYERED = 0x80000;
+        private const int WS_EX_TRANSPARENT = 0x20;
+        private const int WS_EX_TOOLWINDOW = 0x80; // prevents from showing in ALT-Tab
 
         internal static void CreateMagicWindow(Form f)
         {
@@ -65,7 +66,7 @@ namespace TwitchFlashbang
 
             f.TransparencyKey = f.BackColor;
             f.TopMost = true;
-            SetWindowLong(f.Handle, GWL_EXSTYLE, exStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT);
+            SetWindowLong(f.Handle, GWL_EXSTYLE, exStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW);
             SetLayeredWindowAttributes(f.Handle, 0, 0, 0x2);
             UpdateWindow(f.Handle);
         }
