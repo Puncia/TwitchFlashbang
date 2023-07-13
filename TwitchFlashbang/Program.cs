@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
 [assembly: AssemblyVersion("0.1.*")]
@@ -12,20 +11,7 @@ namespace TwitchFlashbang
         [STAThread]
         private static void Main()
         {
-            if (!File.Exists("twitchflashbang.json"))
-            {
-                MessageBox.Show("Please create a twitchflashbang.json file first");
-                return;
-            }
-
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("twitchflashbang.json", optional: false, reloadOnChange: true);
-
-            AppConfig.Configuration = builder.Build();
-
-            ApplicationConfiguration.Initialize();
-            Application.Run(new Flashbang());
+            Application.Run(new App());
         }
     }
 }

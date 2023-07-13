@@ -1,9 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Drawing.Imaging;
+using System.IO;
 using System.Media;
 using System.Security.Cryptography;
 using System.Text;
+using TwitchFlashbang.Twitch;
 
 namespace TwitchFlashbang
 {
@@ -17,27 +18,32 @@ namespace TwitchFlashbang
         private bool forceAbort = false;
         private bool isBlinding = false;
         private bool isFading = false;
-        private readonly bool testMode = false;
+        private readonly bool testMode;
         private readonly ConcurrentQueue<FlashbangData> flashbangs = new();
         private readonly SoundPlayer player = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "flashbang.wav"));
         private readonly Graphics g;
         private readonly Bitmap screenshot;
         private Rectangle? captureRectangle = Screen.PrimaryScreen?.Bounds;
         private readonly Afterimage afterimage;
-        private readonly TwitchBot twitchBot = new();
 
         private readonly Keys flashKey;
 
-        public bool CanThreadsRun = true;
+        private readonly CancellationTokenSource CanThreadsRun = new();
         private double initialOpacity = 1.0;
         private readonly double finalOpacity = 0.0;
 
         private readonly bool enableAfterimage = false;
-        private readonly Dictionary<string, dynamic> perAppOpacity = new();
+        private readonly List<PerAppOpacity> perAppOpacity;
+        private readonly ConfigManager _configManager;
 
-        public Flashbang()
+        private static int N = 0;
+        public event EventHandler<FlashbangData> OnFlashbangTriggered;
+
+        public Flashbang(TwitchAPI? twitchAPI)
         {
             InitializeComponent();
+
+            _configManager = ConfigManager.Load();
 
             notifyIcon1.ContextMenuStrip = new()
             {
@@ -46,11 +52,11 @@ namespace TwitchFlashbang
 
             notifyIcon1.Text = "Twitch Flashbang";
 
-            testMode = Convert.ToBoolean(AppConfig.Configuration["testMode"]);
-            enableAfterimage = Convert.ToBoolean(AppConfig.Configuration["enableAfterimage"]);
+            testMode = _configManager.TestMode;
+            enableAfterimage = _configManager.EnableAfterimage;
 
             KeysConverter kcv = new();
-            flashKey = (Keys?)kcv.ConvertFrom(AppConfig.Configuration["testKey"] ?? string.Empty) ?? Keys.None;
+            flashKey = (Keys?)kcv.ConvertFrom(_configManager.TestKey ?? string.Empty) ?? Keys.None;
 
             if (enableAfterimage)
             {
@@ -58,25 +64,11 @@ namespace TwitchFlashbang
                 afterimage.Show();
             }
 
-            try
-            {
-                var perAppOpacitySection = AppConfig.Configuration.GetSection("perAppOpacity");
-                var perAppOpacityValues = perAppOpacitySection.GetChildren();
-
-                foreach (var oValue in perAppOpacityValues)
-                {
-                    perAppOpacity.Add(oValue.Key.ToLower(), Convert.ToDouble(oValue.Value));
-                }
-            }
-            catch (NullReferenceException) { }
-
-            Task.Run(twitchBot.MainAsync);
-
-            twitchBot.OnFlashbangData += TwitchBot_OnFlashbangData;
+            perAppOpacity = _configManager.PerAppOpacity;
 
             Debug.WriteLine($"Handle for Flashbang: {Handle:x}");
 
-            if (Screen.PrimaryScreen == null)
+            if (Screen.PrimaryScreen is null)
             {
                 return;
             }
@@ -98,7 +90,7 @@ namespace TwitchFlashbang
 
                 Size = s;
                 Location = l;
-                if (enableAfterimage && afterimage != null)
+                if (enableAfterimage && afterimage is not null)
                 {
                     afterimage.SetSize(s);
                     afterimage.SetLocation(l);
@@ -108,6 +100,9 @@ namespace TwitchFlashbang
 
                 numIterations = (int)(fadeDuration * updateRate);
             }
+
+            if (twitchAPI is not null)
+                twitchAPI.OnFlashbangData += TwitchBot_OnFlashbangData;
 
             WinAPI.CreateMagicWindow(this);
 
@@ -123,7 +118,11 @@ namespace TwitchFlashbang
             {
                 QueueTestFlash();
             }
-            Debug.WriteLine(k.ToString());
+
+            if (testMode)
+            {
+                Debug.WriteLine(k.ToString());
+            }
         }
 
         private void Exit(object? sender, EventArgs e)
@@ -139,11 +138,11 @@ namespace TwitchFlashbang
 
         private void t_ProcessFlashbangs()
         {
-            while (CanThreadsRun)
+            while (!CanThreadsRun.IsCancellationRequested)
             {
                 if (!isBlinding && !flashbangs.IsEmpty)
                 {
-                    Debug.WriteLine($"\ncurrent queue length: {flashbangs.Count - 1}");
+                    Debug.WriteLine($"======NEW FLASHBANG======\ncurrent queue length: {flashbangs.Count - 1}");
                     FlashbangData? fd;
                     if (flashbangs.TryDequeue(out fd))
                     {
@@ -157,21 +156,19 @@ namespace TwitchFlashbang
                     forceAbort = false;
                 }
 
-                if (forceAbort)
+                if (isFading && flashbangs.Count > 0)
                 {
-                    Thread.Sleep(RandomNumberGenerator.GetInt32(1300, 1900));
+                    Thread.Sleep(RandomNumberGenerator.GetInt32(1300, 2400));
                 }
-                else
-                {
-                    Thread.Sleep(10);
-                }
+
+                Thread.Sleep(10);
             }
         }
 
         public void QueueTestFlash()
         {
             FlashbangData fd = new(GenerateID(6), GenerateID(6));
-            Debug.WriteLine($"{fd.ID} enqueueing..");
+            Debug.WriteLine($"[{fd.ID}] enqueueing..");
             flashbangs.Enqueue(fd);
         }
 
@@ -192,14 +189,14 @@ namespace TwitchFlashbang
 
             initialOpacity = 1;
             string? foregroundWnd = Path.GetFileNameWithoutExtension(GetForegroundWindowExecutableName())?.ToLower();
-            if (foregroundWnd != null)
+            if (foregroundWnd is not null)
             {
                 Debug.WriteLine($"foreground wnd: {foregroundWnd}");
                 foreach (var app in perAppOpacity)
                 {
-                    if (foregroundWnd == Path.GetFileNameWithoutExtension(app.Key))
+                    if (foregroundWnd == Path.GetFileNameWithoutExtension(app.AppName))
                     {
-                        initialOpacity = app.Value;
+                        initialOpacity = app.Opacity;
                         break;
                     }
                 }
@@ -227,7 +224,7 @@ namespace TwitchFlashbang
             }
 
             while (fd.flashingStopwatch.ElapsedMilliseconds < flashDuration * 1000) { Thread.Sleep(1); }
-            Debug.WriteLine($"[{fd.ID}] flash: {fd.flashingStopwatch.ElapsedMilliseconds}ms");
+            Debug.WriteLine($"[{fd.ID}] flash duration: {fd.flashingStopwatch.ElapsedMilliseconds}ms");
             isBlinding = false;
 
             /// ******
@@ -266,6 +263,10 @@ namespace TwitchFlashbang
 
                     Debug.WriteLine($"[{fd.ID}] aborting at {Math.Abs(aborted_timeSpan.TotalMilliseconds)}ms");
 
+                    BeginInvoke(() =>
+                    {
+                        OnFlashbangTriggered?.Invoke(this, fd);
+                    });
                     return;
                 }
             }
@@ -273,16 +274,21 @@ namespace TwitchFlashbang
             DateTime dtStop = DateTime.Now;
             TimeSpan timeSpan = dtStart - dtStop;
 
-            Debug.WriteLine($"[#{fd.ID}] done in {Math.Abs(timeSpan.TotalMilliseconds)}ms");
+            Debug.WriteLine($"[{fd.ID}] done in {Math.Abs(timeSpan.TotalMilliseconds)}ms");
             fd.fadingStopwatch.Stop();
             isFading = false;
-
             fd.Dispose();
+
 
             BeginInvoke(() =>
             {
                 WinAPI.SetLayeredWindowAttributes(Handle, 0, 0, 0x2);
                 WinAPI.UpdateWindow(Handle);
+            });
+
+            BeginInvoke(() =>
+            {
+                OnFlashbangTriggered?.Invoke(this, (fd));
             });
 
             return;
@@ -332,7 +338,8 @@ namespace TwitchFlashbang
 
         private void Flashbang_FormClosed(object sender, FormClosedEventArgs e)
         {
-            CanThreadsRun = false;
+            CanThreadsRun.Cancel();
+
             Application.Exit();
         }
     }

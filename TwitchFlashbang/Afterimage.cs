@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
 namespace TwitchFlashbang
@@ -58,7 +57,7 @@ namespace TwitchFlashbang
                 // Create an image attributes object for color transformation
                 using (ImageAttributes imageAttributes = new())
                 {
-                    ColorMatrix colorMatrix = new ColorMatrix(
+                    ColorMatrix colorMatrix = new(
                         new float[][]
                         {
                             new float[] { 2f, 0f, 0f, 0f, 0f },             // Red component
