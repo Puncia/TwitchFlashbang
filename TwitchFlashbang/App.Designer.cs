@@ -137,7 +137,7 @@
             // 
             warningLabel.AutoSize = true;
             warningLabel.ForeColor = Color.Red;
-            warningLabel.Location = new Point(8, 136);
+            warningLabel.Location = new Point(8, 116);
             warningLabel.Name = "warningLabel";
             warningLabel.Size = new Size(0, 15);
             warningLabel.TabIndex = 12;
