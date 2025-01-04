@@ -36,8 +36,7 @@ namespace TwitchFlashbang
         private readonly List<PerAppOpacity> perAppOpacity;
         private readonly ConfigManager _configManager;
 
-        private static int N = 0;
-        public event EventHandler<FlashbangData> OnFlashbangTriggered;
+        public event EventHandler<TriggeredFlashbangData> OnFlashbangTriggered;
 
         public Flashbang(TwitchAPI? twitchAPI)
         {
@@ -224,7 +223,8 @@ namespace TwitchFlashbang
             }
 
             while (fd.flashingStopwatch.ElapsedMilliseconds < flashDuration * 1000) { Thread.Sleep(1); }
-            Debug.WriteLine($"[{fd.ID}] flash duration: {fd.flashingStopwatch.ElapsedMilliseconds}ms");
+            var flashingTime = fd.flashingStopwatch.ElapsedMilliseconds;
+            Debug.WriteLine($"[{fd.ID}] flash duration: {flashingTime}ms");
             isBlinding = false;
 
             /// ******
@@ -265,7 +265,14 @@ namespace TwitchFlashbang
 
                     BeginInvoke(() =>
                     {
-                        OnFlashbangTriggered?.Invoke(this, fd);
+                        OnFlashbangTriggered?.Invoke(this,
+                        new TriggeredFlashbangData
+                        {
+                            Aborted = true,
+                            FlashTime = flashingTime.ToString("N0"),
+                            FadingTime = "0",
+                            ID = fd.ID
+                        });
                     });
                     return;
                 }
@@ -279,7 +286,6 @@ namespace TwitchFlashbang
             isFading = false;
             fd.Dispose();
 
-
             BeginInvoke(() =>
             {
                 WinAPI.SetLayeredWindowAttributes(Handle, 0, 0, 0x2);
@@ -288,7 +294,13 @@ namespace TwitchFlashbang
 
             BeginInvoke(() =>
             {
-                OnFlashbangTriggered?.Invoke(this, (fd));
+                OnFlashbangTriggered?.Invoke(this, new TriggeredFlashbangData
+                {
+                    Aborted = false,
+                    FlashTime = flashingTime.ToString("N0"),
+                    FadingTime = (-timeSpan.TotalMilliseconds).ToString("N0"),
+                    ID = fd.ID
+                });
             });
 
             return;
@@ -333,7 +345,7 @@ namespace TwitchFlashbang
                 rng.GetBytes(buffer);
             }
 
-            return BitConverter.ToString(buffer).Replace("-", "").Substring(0, length).ToLower();
+            return BitConverter.ToString(buffer).Replace("-", "")[..length].ToLower();
         }
 
         private void Flashbang_FormClosed(object sender, FormClosedEventArgs e)

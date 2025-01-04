@@ -38,10 +38,12 @@ namespace TwitchFlashbang
             redirectUriLabel.Text = _configManager.Twitch.RedirectUri;
         }
 
-        private void _flashbang_OnFlashbangTriggered(object? _, FlashbangData f)
+        private void _flashbang_OnFlashbangTriggered(object? _, TriggeredFlashbangData f)
         {
             UsedFlashbangUI flashbangUI = new(f, ++N);
             flowLayoutPanel1.Controls.Add(flashbangUI);
+            flowLayoutPanel1.Controls.SetChildIndex(flashbangUI, 0);
+            Invoke(() => totalFlashbangsLabel.Text = N.ToString());
         }
 
         private void ViewSwitcher_WarningFired(string w)

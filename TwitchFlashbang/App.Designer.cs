@@ -50,6 +50,8 @@
             label1 = new Label();
             checkedListBox1 = new CheckedListBox();
             tabPage3 = new TabPage();
+            totalFlashbangsLabel = new TFLabel();
+            label7 = new TFLabel();
             flowLayoutPanel1 = new FlowLayoutPanel();
             viewSwitcher.SuspendLayout();
             tabPage1.SuspendLayout();
@@ -129,7 +131,7 @@
             label5.AutoSize = true;
             label5.Location = new Point(6, 151);
             label5.Name = "label5";
-            label5.Size = new Size(422, 15);
+            label5.Size = new Size(423, 15);
             label5.TabIndex = 13;
             label5.Text = "Go to the Twitch Dev Console and create a new App. Copy the credentials here.";
             // 
@@ -285,6 +287,7 @@
             checkedListBox1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             checkedListBox1.BackColor = Color.FromArgb(30, 30, 46);
             checkedListBox1.BorderStyle = BorderStyle.None;
+            checkedListBox1.CheckOnClick = true;
             checkedListBox1.ForeColor = SystemColors.Info;
             checkedListBox1.FormattingEnabled = true;
             checkedListBox1.Location = new Point(6, 30);
@@ -295,6 +298,8 @@
             // 
             // tabPage3
             // 
+            tabPage3.Controls.Add(totalFlashbangsLabel);
+            tabPage3.Controls.Add(label7);
             tabPage3.Controls.Add(flowLayoutPanel1);
             tabPage3.Location = new Point(4, 24);
             tabPage3.Name = "tabPage3";
@@ -303,16 +308,38 @@
             tabPage3.Text = "tabPage3";
             tabPage3.UseVisualStyleBackColor = true;
             // 
+            // totalFlashbangsLabel
+            // 
+            totalFlashbangsLabel.AutoSize = true;
+            totalFlashbangsLabel.Font = new Font("Microsoft Sans Serif", 12F);
+            totalFlashbangsLabel.ForeColor = Color.FromArgb(64, 64, 64);
+            totalFlashbangsLabel.Location = new Point(170, 10);
+            totalFlashbangsLabel.Name = "totalFlashbangsLabel";
+            totalFlashbangsLabel.Size = new Size(18, 20);
+            totalFlashbangsLabel.TabIndex = 1;
+            totalFlashbangsLabel.Text = "0";
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Font = new Font("Microsoft Sans Serif", 12F);
+            label7.ForeColor = Color.FromArgb(64, 64, 64);
+            label7.Location = new Point(3, 10);
+            label7.Name = "label7";
+            label7.Size = new Size(130, 20);
+            label7.TabIndex = 0;
+            label7.Text = "Total flashbangs:";
+            // 
             // flowLayoutPanel1
             // 
             flowLayoutPanel1.AutoScroll = true;
-            flowLayoutPanel1.Dock = DockStyle.Fill;
+            flowLayoutPanel1.Dock = DockStyle.Bottom;
             flowLayoutPanel1.FlowDirection = FlowDirection.TopDown;
             flowLayoutPanel1.ForeColor = SystemColors.ControlText;
-            flowLayoutPanel1.Location = new Point(0, 0);
+            flowLayoutPanel1.Location = new Point(0, 28);
             flowLayoutPanel1.Margin = new Padding(0);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
-            flowLayoutPanel1.Size = new Size(474, 273);
+            flowLayoutPanel1.Size = new Size(474, 245);
             flowLayoutPanel1.TabIndex = 0;
             flowLayoutPanel1.WrapContents = false;
             // 
@@ -337,6 +364,7 @@
             tabPage2.ResumeLayout(false);
             tabPage2.PerformLayout();
             tabPage3.ResumeLayout(false);
+            tabPage3.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -363,5 +391,7 @@
         private TextBox textBox_channelName;
         private Label label3;
         private Label label6;
+        private TFLabel label7;
+        private TFLabel totalFlashbangsLabel;
     }
 }

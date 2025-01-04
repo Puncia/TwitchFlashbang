@@ -163,7 +163,7 @@ namespace TwitchFlashbang.Twitch
             {
                 if (e.RewardRedeemed.Redemption.Reward.Id == ID)
                 {
-                    OnFlashbangData?.Invoke(new FlashbangData(e.RewardRedeemed.Redemption.Id, e.ChannelId));
+                    OnFlashbangData?.Invoke(new FlashbangData(e.RewardRedeemed.Redemption.Id.Substring(e.RewardRedeemed.Redemption.Id.Length - 6, 6), e.ChannelId));
                 }
             }
         }
