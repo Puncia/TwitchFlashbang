@@ -196,6 +196,7 @@ namespace TwitchFlashbang
 
         private void App_Load(object sender, EventArgs e)
         {
+            Location = Screen.PrimaryScreen.WorkingArea.Location;
             LoadCredentialsIntoUI();
 
             var mc = AreConfigCredentialsValid();
