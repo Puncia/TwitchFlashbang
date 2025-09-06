@@ -89,6 +89,9 @@ namespace TwitchFlashbang
 
                 Size = s;
                 Location = l;
+
+                Debug.WriteLine($"Size: {s}, Location: {l}");
+
                 if (enableAfterimage && afterimage is not null)
                 {
                     afterimage.SetSize(s);
